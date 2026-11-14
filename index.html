@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Video Frame Capture</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <main class="container">
+
+        <h1>Video Frame Capture</h1>
+
+        <p class="description">
+            Search for a video and capture a frame at a specific timestamp.
+        </p>
+
+        <form id="capture-form">
+
+            <label for="search-query">
+                Video Search Query
+            </label>
+
+            <input
+                type="text"
+                id="search-query"
+                placeholder="e.g. Minecraft gameplay"
+                required
+            >
+
+            <label for="timestamp">
+                Timestamp
+            </label>
+
+            <input
+                type="text"
+                id="timestamp"
+                placeholder="e.g. 02:35"
+                required
+            >
+
+            <button type="submit">
+                Capture Frame
+            </button>
+
+        </form>
+
+        <section id="result" class="result hidden">
+
+            <h2>Captured Frame</h2>
+
+            <img id="screenshot" src="" alt="Captured video frame">
+
+        </section>
+
+    </main>
+
+    <script src="script.js"></script>
+
+</body>
+</html>
