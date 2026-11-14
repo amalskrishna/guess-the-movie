@@ -1,0 +1,16 @@
+# Node.js dependencies
+node_modules/
+
+# Environment variables / secrets
+.env
+.env.*
+
+# Generated screenshots
+screenshots/
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
