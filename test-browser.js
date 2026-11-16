@@ -1,66 +1,138 @@
 const { chromium } = require("playwright");
-
-function timestampToSeconds(timestamp){
-    const parts = timestamp.split(":").map(Number);
-    if(parts.length === 2){
-        return parts[0]*60+parts[1];
-    }
-    if(parts.length === 3){
-        return parts[0]*3600 + parts[1]*60 + parts[2];
-    }
-    throw new Error("Invalid timestamp format");
-}
+const fs =require("fs");
+fs.mkdirSync("screenshots", {recursive: true});
 
 async function main() {
     const browser = await chromium.launch({
+        channel: "chrome",
         headless: false
     });
 
-    const page = await browser.newPage();
+    const context = await browser.newContext();
+    const page = await context.newPage();
 
-    await page.goto("https://www.youtube.com");
+    // Detect and close unwanted advertisement popups
+    context.on("page", async popup => {
 
-    console.log("YouTube opened!");
+        //await popup.close().catch(() => {});
 
-    const searchBox = page.locator('input[name="search_query"]');
-
-    await searchBox.fill("minecraft");
-
-    await searchBox.press("Enter");
-
-    const firstVideo = page.locator("ytd-video-renderer").first();
-
-    const videoLink = firstVideo.locator("a#video-title");
-
-    await videoLink.waitFor({
-        state: "visible"
+        console.log("Popup closed!");
     });
 
-    await videoLink.click();
-
-    console.log("First video opened.");
-
-    const videoPlayer = page.locator("#movie_player video");
-
-    await videoPlayer.waitFor({
-        state : "visible"
+    // Open Movy
+    await page.goto("https://www.movy.sx/", {
+        waitUntil: "domcontentloaded"
     });
 
-    console.log("video player detected!");
+    console.log("Movy opened!");
 
-    const timestamp = "02:35";
-    const seconds = timestampToSeconds(timestamp);
+    await page.waitForTimeout(3000);
 
-    await videoPlayer.evaluate((video, time) => {
-        video.currentTime = time;
-    }, seconds);
+    // Locate the main search button
+    const searchButton = page.locator(
+        'button[aria-label="Search"]'
+    ).first();
 
-    console.log(`Video jumped to ${timestamp}!`);
+    // First click: trigger the unwanted popup
+    await searchButton.click();
+
+    await page.waitForTimeout(1500);
+
+    // Second click: open the search interface
+    await searchButton.click();
+
+    console.log("Search button clicked again!");
+
+    // Find the search input
+    const searchInput = page.locator(
+        'input[placeholder="Search movies, shows, and anime"]'
+    );
+
+    await searchInput.waitFor({ state: "visible" });
+
+    // Enter movie title
+    await searchInput.fill("Interstellar");
+
+    console.log("Interstellar entered!");
+
+    // Wait for the Interstellar search result
+    const movieResult = page.getByRole("button", {
+        name: /Interstellar/
+    }).first();
+
+    await movieResult.waitFor({ state: "visible" });
+
+    // Click the movie
+    await movieResult.click();
+
+    console.log("Interstellar selected!");
+
+/*========================
+console.log("Iframes:", await page.locator("iframe").count());
+
+const iframeInfo = await page.locator("iframe").evaluateAll(iframes =>
+    iframes.map(frame => ({
+        src: frame.src,
+        width: frame.getBoundingClientRect().width,
+        height: frame.getBoundingClientRect().height,
+        visible: !!(
+            frame.offsetWidth ||
+            frame.offsetHeight ||
+            frame.getClientRects().length
+        )
+    }))
+);
+
+console.log("Iframe info:", iframeInfo);
+//===============*/
+
+    // Find and click the Play button
+    const playButton = page.getByRole("link", {
+        name: "Play",
+        exact: true
+    });
+
+    await playButton.waitFor({ state: "visible" });
+    await playButton.click();
+
+await page.waitForTimeout(3000);
 
 
-    await page.waitForTimeout(5000);
+//=========================================================
+
+const video = page.locator("video");
+
+// Seek to 10 minutes and 25 seconds
+await video.evaluate(v => {
+    v.currentTime = 1625;
+});
+
+// Wait for the video to update
+await page.waitForTimeout(8000);
+
+// Check the new playback position
+const currentTime = await video.evaluate(v => v.currentTime);
+
+console.log("Current video time:", currentTime);
+
+//============================================================
+// Pause the video at the current frame
+//await video.evaluate(v => v.pause());
+
+// Capture the video element
+await video.screenshot({
+    path: "screenshots/interstellar-frame.png"
+});
+
+console.log("Screenshot captured!");
+
+
+    // Keep browser open so we can inspect the results
+    await page.waitForTimeout(360000);
 
     await browser.close();
 }
 
-main();
+main().catch(error => {
+    console.error("Automation failed:", error);
+});

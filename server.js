@@ -29,33 +29,78 @@ app.post("/api/capture", async function (request, response) {
     let browser;
     try{
         const seconds = timestampToSeconds(timestamp);
+
         browser = await chromium.launch({
-            headless : false
+            channel: "chrome",
+            headless: false
         });
-        const page = await browser.newPage();
-        await page.goto("https://www.youtube.com");
-        const searchBox = page.locator('input[name = "search_query"]');
+
+        const context = await browser.newContext();
+        const page = await context.newPage();
+
+        await page.goto("https://cinejoy.pk/", {
+            waitUntil: "domcontentloaded"
+        });
+
+        await page.waitForTimeout(2000);
+        const close = page.locator(
+            'button[aria-label="Close"]'
+            ).first();
+        await close.click();
+
+        // Open search
+        const searchButton = page.locator('button[aria-label*="search" i]');
+        await searchButton.first().click();
+
+        await page.waitForTimeout(1000);
+
+        // Search movie
+        const searchBox = page.locator(
+            'input[placeholder="Search keywords..."]'
+        );
+
         await searchBox.fill(query);
-        await searchBox.press("Enter");
 
-        const firstVideo = page.locator("ytd-video-renderer").first();
-        const videoLink = firstVideo.locator("a#video-title");
-        await videoLink.waitFor({
-            state: "visible"
-        });
-        await videoLink.click();
-
-        const videoPlayer = page.locator("#movie_player video");
-        await videoPlayer.waitFor({
-            status: "visible"
-        });
-
-        await videoPlayer.evaluate((video,time) => {
-            video.currentTime = time;
-        }, seconds);
-        console.log(`video jumped to ${timestamp}!`);
         await page.waitForTimeout(2000);
 
+        // Click movie card
+        const movieCard = page.locator(`a[aria-label="${query}"]`).first();
+
+        await movieCard.locator("img").click();
+
+        await page.waitForTimeout(2000);
+
+        // Click Play
+        const playButton = page.getByRole("button", {
+            name: "Play",
+            exact: true
+        });
+
+        await playButton.click();
+
+        await page.waitForTimeout(2000);
+
+        // Get video
+        const videoPlayer = page.locator("video");
+
+        await videoPlayer.waitFor({
+            state: "visible"
+        });
+
+        // Seek to timestamp
+        await videoPlayer.evaluate((video, time) => {
+            video.currentTime = time;
+        }, seconds);
+
+        console.log(`video jumped to ${timestamp}!`);
+
+        await page.waitForTimeout(2000);
+
+        // Hide controls
+        await page.mouse.move(10, 10);
+        await page.waitForTimeout(3000);
+
+        // Capture frame
         await videoPlayer.screenshot({
             path: "public/captured-frame.png"
         });
