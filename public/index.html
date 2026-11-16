@@ -13,6 +13,36 @@
 
     <main class="container">
 
+
+        <section class="movie-generator">
+            <h2>Generate Movie List</h2>
+
+            <form id="movie-form">
+                <label for="movie-prompt">Genre, Collection or Custom Request</label>
+                <input
+                    type="text"
+                    id="movie-prompt"
+                    placeholder="e.g. Marvel movies or Science fiction"
+                    required
+                >
+
+                <label for="movie-count">Number of Rounds</label>
+                <input
+                    type="number"
+                    id="movie-count"
+                    min="1"
+                    max="30"
+                    value="10"
+                    required
+                >
+
+                <button type="submit">Generate Movies</button>
+            </form>
+
+            <div id="movie-results"></div>
+        </section>
+
+
         <h1>Video Frame Capture</h1>
 
         <p class="description">

@@ -8,6 +8,7 @@ const ai = new GoogleGenAI({
 
 const app = express();
 const PORT = 3000;
+const generatedMovieLists = new Map();
 
 app.use(express.json());
 app.use(express.static("public"));
@@ -249,9 +250,58 @@ app.post("/api/generate-movies", async function (request, response) {
 
         });
 
+        
         const movieList = JSON.parse(result.text);
 
-        response.json(movieList);
+        // Check that the movies property is an array
+        if (!movieList.movies || !Array.isArray(movieList.movies)) {
+            throw new Error("Invalid movie list format.");
+        }
+
+        // Check the requested number of movies
+        if (movieList.movies.length !== count) {
+            throw new Error(`Expected ${count} movies, but received ${movieList.movies.length}.`);
+        }
+
+        // Check each movie's title and release year
+        for (const movie of movieList.movies) {
+            if (
+                typeof movie.title !== "string" ||
+                movie.title.trim() === "" ||
+                !Number.isInteger(movie.year) ||
+                movie.year < 1888 ||
+                movie.year > new Date().getFullYear() + 1
+            ) {
+                throw new Error("A movie has an invalid title or release year.");
+            }
+        }
+
+        // Check for duplicate movie titles
+        const titles = movieList.movies.map(movie =>
+            movie.title.trim().toLowerCase()
+        );
+
+        if (new Set(titles).size !== titles.length) {
+            throw new Error("Gemini returned duplicate movies.");
+        }
+
+
+        // Generate a unique ID for this movie list
+        const listId = Math.random().toString(36).substring(2, 10).toUpperCase();
+
+        // Store the complete movie list privately
+        generatedMovieLists.set(listId, {
+            movies: movieList.movies,
+            currentMovieIndex: 0
+        });
+
+        // Only send the list ID and success message to the frontend
+        response.json({
+            success: true,
+            message: "Movie list generated successfully!",
+            listId: listId,
+            totalMovies: movieList.movies.length
+        });
 
     } catch (error) {
         console.error("Movie generation error:", error);

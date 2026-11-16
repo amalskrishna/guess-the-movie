@@ -1,3 +1,4 @@
+let generatedListId = null;
 const form = document.getElementById("capture-form");
 
 form.addEventListener("submit", async function (event) {
@@ -38,5 +39,52 @@ form.addEventListener("submit", async function (event) {
     } catch (error) {
         console.error("Error:", error);
         alert(error.message);
+    }
+});
+
+
+
+const movieForm = document.getElementById("movie-form");
+
+movieForm.addEventListener("submit", async function (event) {
+    event.preventDefault();
+
+    const prompt = document.getElementById("movie-prompt").value;
+    const count = Number(document.getElementById("movie-count").value);
+
+    const results = document.getElementById("movie-results");
+    const button = movieForm.querySelector("button");
+
+    button.disabled = true;
+    button.textContent = "Generating...";
+    results.textContent = "Asking Gemini to generate movies...";
+
+    try {
+        const response = await fetch("/api/generate-movies", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                prompt: prompt,
+                count: count
+            })
+        });
+
+        const data = await response.json();
+        generatedListId = data.listId;
+
+        if (!response.ok) {
+            throw new Error(data.error || "Movie generation failed.");
+        }
+
+        results.textContent =
+            `Movie list generated successfully! ${data.totalMovies} rounds are ready.`;
+
+    } catch (error) {
+        results.textContent = "Error: " + error.message;
+    } finally {
+        button.disabled = false;
+        button.textContent = "Generate Movies";
     }
 });
