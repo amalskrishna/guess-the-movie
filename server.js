@@ -54,12 +54,19 @@ app.post("/api/capture", async function (request, response) {
             video.currentTime = time;
         }, seconds);
         console.log(`video jumped to ${timestamp}!`);
-        await page.waitForTimeout(10000);
+        await page.waitForTimeout(2000);
+
+        await videoPlayer.screenshot({
+            path: "public/captured-frame.png"
+        });
+
+        console.log("screenshot captured...");
 
         response.json({
             message: "video successfully opened and timestamp reached!",
             query: query,
-            timestamp: timestamp
+            timestamp: timestamp,
+            imageUrl: "/captured-frame.png"
         });
     }
     catch (error){

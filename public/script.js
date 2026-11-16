@@ -6,18 +6,35 @@ form.addEventListener("submit", async function (event) {
     const searchQuery = document.getElementById("search-query").value;
     const timestamp = document.getElementById("timestamp").value;
 
-    const response = await fetch("/api/capture", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-            query: searchQuery,
-            timestamp: timestamp
-        })
-    });
+    try {
+        const response = await fetch("/api/capture", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                query: searchQuery,
+                timestamp: timestamp
+            })
+        });
 
-    const result = await response.json();
+        const result = await response.json();
 
-    console.log(result);
+        if (!response.ok) {
+            throw new Error(result.error);
+        }
+
+        // Display the captured screenshot
+        const screenshot = document.getElementById("screenshot");
+
+        screenshot.src = result.imageUrl + "?t=" + Date.now();
+
+        document.getElementById("result").classList.remove("hidden");
+
+        console.log(result);
+
+    } catch (error) {
+        console.error("Error:", error);
+        alert(error.message);
+    }
 });
