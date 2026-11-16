@@ -1,11 +1,19 @@
 const express = require("express");
 const { chromium } = require("playwright");
+require("dotenv").config();
+const { GoogleGenAI } = require("@google/genai");
+const ai = new GoogleGenAI({
+    apiKey: process.env.GEMINI_API_KEY
+});
 
 const app = express();
 const PORT = 3000;
 
 app.use(express.json());
 app.use(express.static("public"));
+app.get("/test", function (request, response) {
+    response.send("You are running the correct server.js!");
+});
 
 // Convert timestamp into seconds
 function timestampToSeconds(timestamp) {
@@ -152,6 +160,109 @@ app.post("/api/capture", async function (request, response) {
         });
     }
 });
+
+app.get("/api/test-gemini", async function (request, response) {
+    try {
+        const result = await ai.models.generateContent({
+            model: "gemini-3.5-flash-lite",
+            contents: "Reply with exactly: Gemini API is working!"
+        });
+
+        response.json({
+            success: true,
+            message: result.text
+        });
+
+    } catch (error) {
+        console.error("Gemini error:", error);
+
+        response.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+
+
+app.post("/api/generate-movies", async function (request, response) {
+    try {
+        const { prompt, count } = request.body;
+        const strategies = [
+            "Explore lesser-known but highly relevant movies.",
+            "Prioritize movies from different decades.",
+            "Focus on critically acclaimed movies.",
+            "Include more international cinema where relevant.",
+            "Explore different directors and subgenres.",
+            "Balance popular hits with hidden gems.",
+            "Choose a fresh mix rather than the obvious choices."
+        ];
+
+        const variationStrategy = strategies[
+            Math.floor(Math.random() * strategies.length)
+        ];
+        if (!Number.isInteger(count) || count < 1 || count > 30) {
+            return response.status(400).json({
+                error: "Movie count must be between 1 and 30."
+            });
+        }
+
+        const result = await ai.models.generateContent({
+            model: "gemini-3.5-flash-lite",
+            
+            contents: `
+                Selection strategy for this generation:
+                ${variationStrategy}
+                Follow this strategy while keeping every movie relevant to the request.
+                Generate exactly ${count} movies based on this request:
+                "${prompt}"
+
+                MOVIE RULES:
+                1. Include only real, officially released theatrical movies.
+                2. Do not include TV shows, web series, documentaries, or unreleased movies.
+                3. Do not include duplicate movies.
+                4. Use the original theatrical release year.
+                5. Ensure every movie genuinely matches the requested genre or collection.
+                6. For collections such as MCU or DCU, include only movies belonging to that collection.
+                7. If the request is broad, select movies from different eras, directors, and subgenres.
+                8. If the request is specific, prioritize relevance over variety.
+                
+                VARIETY RULES:
+                1. Make each generation somewhat different from previous generations.
+                2. Avoid repeatedly choosing only the most famous or obvious movies.
+                3. Include a mix of popular and less commonly suggested movies when appropriate.
+                4. Vary the selection while keeping every movie relevant to the request.
+                5. Do not deliberately choose obscure or unrelated movies just to create variety.
+
+                OUTPUT RULES:
+                Return exactly ${count} movies.
+                Return ONLY valid JSON in this format:
+                {
+                    "movies": [
+                        {
+                            "title": "Interstellar",
+                            "year": 2014
+                        }
+                    ]
+                }
+                Do not include explanations, comments, or Markdown.
+            `
+
+        });
+
+        const movieList = JSON.parse(result.text);
+
+        response.json(movieList);
+
+    } catch (error) {
+        console.error("Movie generation error:", error);
+
+        response.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+
 
 app.listen(PORT, function () {
     console.log(`Server running at http://localhost:${PORT}`);
