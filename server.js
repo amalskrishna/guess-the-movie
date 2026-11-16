@@ -2,32 +2,31 @@ const express = require("express");
 const { chromium } = require("playwright");
 
 const app = express();
-
 const PORT = 3000;
 
-// Allow Express to understand JSON sent by the frontend
 app.use(express.json());
-
-// Serve the frontend
 app.use(express.static("public"));
 
-function timestampToSeconds(timestamp){
+// Convert timestamp into seconds
+function timestampToSeconds(timestamp) {
     const parts = timestamp.split(":").map(Number);
-    if(parts.length === 2){
-        return parts[0]*60+parts[1];
+
+    if (parts.length === 2) {
+        return parts[0] * 60 + parts[1];
     }
-    if(parts.length === 3){
-        return parts[0]*3600 + parts[1]*60 + parts[2];
+
+    if (parts.length === 3) {
+        return parts[0] * 3600 + parts[1] * 60 + parts[2];
     }
+
     throw new Error("Invalid timestamp format");
 }
 
-// Our first API endpoint
-app.post("/api/capture", async function (request, response) {
-    const { query, year, timestamp } = request.body;
-
+// Reusable function to capture a movie frame
+async function captureMovieFrame(query, year, timestamp) {
     let browser;
-    try{
+
+    try {
         const seconds = timestampToSeconds(timestamp);
 
         browser = await chromium.launch({
@@ -43,15 +42,21 @@ app.post("/api/capture", async function (request, response) {
         });
 
         await page.waitForTimeout(2000);
-        const close = page.locator(
-            'button[aria-label="Close"]'
-            ).first();
-        await close.click();
+
+        // Close popup if one appears
+        const closeButton = page.locator('button[aria-label="Close"]').first();
+        console.log(closeButton.count());
+        //if (await closeButton.count() > 0) {
+            await closeButton.click();
+        //}
+        await page.waitForTimeout(1000);
 
         // Open search
-        const searchButton = page.locator('button[aria-label*="search" i]');
-        await searchButton.first().click();
+        const searchButton = page.locator(
+            'button[aria-label*="search" i]'
+        );
 
+        await searchButton.first().click();
         await page.waitForTimeout(1000);
 
         // Search movie
@@ -60,16 +65,19 @@ app.post("/api/capture", async function (request, response) {
         );
 
         await searchBox.fill(query);
-
         await page.waitForTimeout(2000);
 
-        // Click movie card
-        const movieCard = page.locator('a[aria-label]')
-        .filter({hasText: query})
-        .filter({hasText: String(year)})
-        .first();
-        await movieCard.locator("img").click();
+        // Find movie using title and year
+        const movieCard = page.locator("a[aria-label]")
+            .filter({ hasText: query })
+            .filter({ hasText: String(year) })
+            .first();
 
+        if (await movieCard.count() === 0) {
+            throw new Error(`Movie not found: ${query} (${year})`);
+        }
+
+        await movieCard.locator("img").click();
         await page.waitForTimeout(2000);
 
         // Click Play
@@ -79,7 +87,6 @@ app.post("/api/capture", async function (request, response) {
         });
 
         await playButton.click();
-
         await page.waitForTimeout(2000);
 
         // Get video
@@ -94,11 +101,11 @@ app.post("/api/capture", async function (request, response) {
             video.currentTime = time;
         }, seconds);
 
-        console.log(`video jumped to ${timestamp}!`);
+        console.log(`Video jumped to ${timestamp}!`);
 
         await page.waitForTimeout(2000);
 
-        // Hide controls
+        // Hide player controls
         await page.mouse.move(10, 10);
         await page.waitForTimeout(3000);
 
@@ -107,25 +114,42 @@ app.post("/api/capture", async function (request, response) {
             path: "public/captured-frame.png"
         });
 
-        console.log("screenshot captured...");
+        console.log("Screenshot captured!");
 
-        response.json({
-            message: "video successfully opened and timestamp reached!",
-            query: query,
-            timestamp: timestamp,
-            imageUrl: "/captured-frame.png"
-        });
+        return "/captured-frame.png";
     }
-    catch (error){
-        console.error("Automation error: ", error);
-        response.status(500).json({
-            error: "something went wring during video automation."
-        });
-    }
-    finally{
-        if(browser){
+    finally {
+        if (browser) {
             await browser.close();
         }
+    }
+}
+
+// API endpoint
+app.post("/api/capture", async function (request, response) {
+    const { query, year, timestamp } = request.body;
+
+    try {
+        const imageUrl = await captureMovieFrame(
+            query,
+            year,
+            timestamp
+        );
+
+        response.json({
+            message: "Frame captured successfully!",
+            query,
+            year,
+            timestamp,
+            imageUrl
+        });
+    }
+    catch (error) {
+        console.error("Automation error:", error);
+
+        response.status(500).json({
+            error: error.message
+        });
     }
 });
 
