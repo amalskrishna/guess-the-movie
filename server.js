@@ -4,8 +4,24 @@ const app = express();
 
 const PORT = 3000;
 
-app.get("/", function (request, response) {
-    response.send("Video Frame Capture backend is working!");
+// Allow Express to understand JSON sent by the frontend
+app.use(express.json());
+
+// Serve the frontend
+app.use(express.static("public"));
+
+// Our first API endpoint
+app.post("/api/capture", function (request, response) {
+    const { query, timestamp } = request.body;
+
+    console.log("Received query:", query);
+    console.log("Received timestamp:", timestamp);
+
+    response.json({
+        message: "Request received successfully!",
+        query: query,
+        timestamp: timestamp
+    });
 });
 
 app.listen(PORT, function () {
