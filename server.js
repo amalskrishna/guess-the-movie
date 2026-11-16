@@ -24,7 +24,7 @@ function timestampToSeconds(timestamp){
 
 // Our first API endpoint
 app.post("/api/capture", async function (request, response) {
-    const { query, timestamp } = request.body;
+    const { query, year, timestamp } = request.body;
 
     let browser;
     try{
@@ -64,8 +64,10 @@ app.post("/api/capture", async function (request, response) {
         await page.waitForTimeout(2000);
 
         // Click movie card
-        const movieCard = page.locator(`a[aria-label="${query}"]`).first();
-
+        const movieCard = page.locator('a[aria-label]')
+        .filter({hasText: query})
+        .filter({hasText: String(year)})
+        .first();
         await movieCard.locator("img").click();
 
         await page.waitForTimeout(2000);

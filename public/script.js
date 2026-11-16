@@ -5,6 +5,7 @@ form.addEventListener("submit", async function (event) {
 
     const searchQuery = document.getElementById("search-query").value;
     const timestamp = document.getElementById("timestamp").value;
+    const year = document.getElementById("movie-year").value;
 
     try {
         const response = await fetch("/api/capture", {
@@ -14,6 +15,7 @@ form.addEventListener("submit", async function (event) {
             },
             body: JSON.stringify({
                 query: searchQuery,
+                year: year,
                 timestamp: timestamp
             })
         });
