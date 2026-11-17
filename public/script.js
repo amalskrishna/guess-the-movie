@@ -211,3 +211,35 @@ function startLobbyPolling(gameCode) {
         loadRoomLobby(gameCode);
     }, 2000);
 }
+
+
+const startGameButton = document.getElementById("start-game-button");
+
+startGameButton.addEventListener("click", async function () {
+
+    try {
+        const response = await fetch(`/api/rooms/${gameCode}/start`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                playerId: currentPlayerId
+            })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error || "Unable to start game.");
+        }
+
+        alert("Game started successfully!");
+
+        // Refresh the lobby
+        loadRoomLobby(gameCode);
+
+    } catch (error) {
+        alert(error.message);
+    }
+});

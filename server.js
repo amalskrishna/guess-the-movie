@@ -410,6 +410,52 @@ app.get("/api/rooms/:gameCode", function (request, response) {
 });
 
 
+// Start a game
+app.post("/api/rooms/:gameCode/start", function (request, response) {
+    const gameCode = request.params.gameCode.toUpperCase();
+    const { playerId } = request.body;
+
+    // Find the room
+    const room = rooms.get(gameCode);
+
+    if (!room) {
+        return response.status(404).json({
+            error: "Room not found."
+        });
+    }
+
+    // Check whether the requester is the host
+    if (playerId !== room.hostId) {
+        return response.status(403).json({
+            error: "Only the host can start the game."
+        });
+    }
+
+    // Check room status
+    if (room.status !== "waiting") {
+        return response.status(400).json({
+            error: "Game has already started."
+        });
+    }
+
+    // Require at least 2 players
+    if (room.players.length < 2) {
+        return response.status(400).json({
+            error: "At least 2 players are required."
+        });
+    }
+
+    // Start the game
+    room.status = "playing";
+
+    response.json({
+        success: true,
+        message: "Game started successfully!",
+        status: room.status
+    });
+});
+
+
 app.listen(PORT, function () {
     console.log(`Server running at http://localhost:${PORT}`);
 });
