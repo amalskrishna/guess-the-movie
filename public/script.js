@@ -1,3 +1,13 @@
+const socket = io();
+socket.on("lobby-updated", ()=>{
+    if (gameCode) {
+        loadRoomLobby(gameCode);
+    }
+});
+socket.on("game-started", () => {
+    window.location.href = `/game.html?room=${gameCode}`;
+});
+
 let gameCode = null;
 let hostId = null;
 let currentPlayerId = null;
@@ -82,8 +92,8 @@ movieForm.addEventListener("submit", async function (event) {
         hostId = data.hostId;
         currentPlayerId = hostId;
         hostToken = data.hostToken;
+        socket.emit("join-game-room", gameCode);
         loadRoomLobby(gameCode);
-        startLobbyPolling(gameCode);
 
         if (!response.ok) {
             throw new Error(data.error || "Movie generation failed.");
@@ -138,10 +148,10 @@ joinForm.addEventListener("submit", async function (event) {
         console.log("Joined room:", data);
         gameCode = data.gameCode;
         currentPlayerId = data.playerId;
+        socket.emit("join-game-room", gameCode);
         joinForm.classList.add("hidden");
         document.getElementById("join-lobby").classList.remove("hidden");
         loadRoomLobby(gameCode);
-        startLobbyPolling(gameCode);
 
     } catch (error) {
         results.textContent = "Error: " + error.message;
@@ -229,6 +239,7 @@ async function loadRoomLobby(gameCode) {
         if (startButton) {
             if (isHost) {
                 startButton.classList.remove("hidden");
+                startButton.disabled = data.players.length < 2;
             } else {
                 startButton.classList.add("hidden");
             }
@@ -240,11 +251,6 @@ async function loadRoomLobby(gameCode) {
             if (error.message === "Unable to load room." ||
                 error.message === "Room not found.") {
 
-                if (lobbyInterval !== null) {
-                    clearInterval(lobbyInterval);
-                    lobbyInterval = null;
-                }
-
                 alert("The room has been closed by the host.");
                 window.location.href = "/";
                 return;
@@ -254,19 +260,6 @@ async function loadRoomLobby(gameCode) {
         }
 }
 
-let lobbyInterval = null;
-function startLobbyPolling(gameCode) {
-
-    // Stop any previous polling
-    if (lobbyInterval !== null) {
-        clearInterval(lobbyInterval);
-    }
-
-    // Refresh the lobby every 2 seconds
-    lobbyInterval = setInterval(function () {
-        loadRoomLobby(gameCode);
-    }, 2000);
-}
 
 const startGameButton = document.getElementById("start-game-button");
 if(startGameButton){
@@ -286,8 +279,6 @@ startGameButton.addEventListener("click", async function () {
         if (!response.ok) {
             throw new Error(data.error || "Unable to start game.");
         }
-
-        alert("Game started successfully!");
 
         // Refresh the lobby
         loadRoomLobby(gameCode);
@@ -355,12 +346,6 @@ if (exitRoomButton) {
                 throw new Error(data.error || "Unable to leave room.");
             }
 
-            // Stop lobby updates
-            if (lobbyInterval !== null) {
-                clearInterval(lobbyInterval);
-                lobbyInterval = null;
-            }
-
             // Reset player information
             currentPlayerId = null;
             gameCode = null;
@@ -403,12 +388,6 @@ if (deleteRoomButton) {
                 throw new Error(
                     data.error || "Unable to delete room."
                 );
-            }
-
-            // Stop lobby polling
-            if (lobbyInterval !== null) {
-                clearInterval(lobbyInterval);
-                lobbyInterval = null;
             }
 
             alert("Room deleted successfully.");

@@ -1,6 +1,8 @@
 const express = require("express");
 const { chromium } = require("playwright");
 const crypto = require("crypto");
+const http = require("http");
+const { Server } = require("socket.io");
 require("dotenv").config();
 const { GoogleGenAI } = require("@google/genai");
 const ai = new GoogleGenAI({
@@ -8,6 +10,8 @@ const ai = new GoogleGenAI({
 });
 
 const app = express();
+const server = http.createServer(app);
+const io = new Server(server);
 const PORT = 3000;
 const rooms = new Map();
 
@@ -383,6 +387,7 @@ app.post("/api/rooms/:gameCode/join", function (request, response) {
         name: playerName.trim(),
         isHost: false
     });
+    io.to(gameCode).emit("lobby-updated");
 
     // Send safe room information to the player
     response.json({
@@ -434,6 +439,7 @@ app.post("/api/rooms/:gameCode/leave", (req, res) => {
     }
 
     room.players.splice(playerIndex, 1);
+    io.to(gameCode).emit("lobby-updated");
 
     res.json({
         success: true,
@@ -512,6 +518,7 @@ app.post("/api/rooms/:gameCode/start", function (request, response) {
     room.currentMovieIndex = 0;
     room.currentSelectorIndex = 0;
     room.currentSelectorId = room.players[0].id;
+    io.to(gameCode).emit("game-started");
 
     response.json({
         success: true,
@@ -598,7 +605,24 @@ app.post("/api/rooms/:gameCode/next-round", function (request, response) {
 
 });
 
+// Handle Socket.IO connections
+io.on("connection", (socket) => {
+    console.log("A player connected:", socket.id);
 
-app.listen(PORT, function () {
+    // Player joins a game room
+    socket.on("join-game-room", (gameCode) => {
+        socket.join(gameCode);
+
+        console.log(
+            `Socket ${socket.id} joined game room ${gameCode}`
+        );
+    });
+
+    socket.on("disconnect", () => {
+        console.log("A player disconnected:", socket.id);
+    });
+});
+
+server.listen(PORT, function () {
     console.log(`Server running at http://localhost:${PORT}`);
 });
