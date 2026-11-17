@@ -13,7 +13,7 @@
         <h1>Host a Game</h1>
         <div class="host-layout">
             <!-- Left side: Lobby -->
-            <section class="host-lobby">
+            <section id="host-lobby" class="host-lobby">
                 <h2>Game Lobby</h2>
                 <div class="room-code">
                     <p>Room Code</p>
@@ -21,6 +21,8 @@
                     <button id="copy-code-button">Copy Code</button>
                 </div>
                 <p id="lobby-status">Waiting for players...</p>
+                <p id="lobby-round">Round: Waiting to start</p>
+                <p id="lobby-selector">Timestamp Selector: Not assigned</p>
                 <h3>Players</h3>
                 <ul id="player-list">
                     <li>Waiting for players...</li>

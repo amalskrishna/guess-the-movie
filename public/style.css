@@ -207,7 +207,7 @@
 /* Utility class */
 
 .hidden {
-    display: none;
+    display: none !important;
 }
 
 

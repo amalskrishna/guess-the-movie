@@ -4,7 +4,8 @@ let currentPlayerId = null;
 let hostToken = null;
 const form = document.getElementById("capture-form");
 
-form.addEventListener("submit", async function (event) {
+if (form) {
+    form.addEventListener("submit", async function (event) {
     event.preventDefault();
 
     const searchQuery = document.getElementById("search-query").value;
@@ -44,9 +45,10 @@ form.addEventListener("submit", async function (event) {
         alert(error.message);
     }
 });
-
+}
 
 const movieForm = document.getElementById("movie-form");
+if (movieForm){
 movieForm.addEventListener("submit", async function (event) {
     event.preventDefault();
 
@@ -97,14 +99,15 @@ movieForm.addEventListener("submit", async function (event) {
         button.textContent = "Generate Movies";
     }
 });
-
+}
 
 const joinForm = document.getElementById("join-form");
+if(joinForm){
 joinForm.addEventListener("submit", async function (event) {
     event.preventDefault();
 
     const playerName = document.getElementById("join-player-name").value.trim();
-    let gameCode = document.getElementById("join-game-code").value.trim();
+    gameCode = document.getElementById("join-game-code").value.trim();
 
     const results = document.getElementById("join-results");
     const button = joinForm.querySelector("button");
@@ -135,6 +138,8 @@ joinForm.addEventListener("submit", async function (event) {
         console.log("Joined room:", data);
         gameCode = data.gameCode;
         currentPlayerId = data.playerId;
+        joinForm.classList.add("hidden");
+        document.getElementById("join-lobby").classList.remove("hidden");
         loadRoomLobby(gameCode);
         startLobbyPolling(gameCode);
 
@@ -146,7 +151,7 @@ joinForm.addEventListener("submit", async function (event) {
         button.textContent = "Join Game";
     }
 });
-
+}
 
 async function loadRoomLobby(gameCode) {
     try {
@@ -158,21 +163,33 @@ async function loadRoomLobby(gameCode) {
         }
 
         // Show the lobby
-        document.getElementById("room-lobby")
-            .classList.remove("hidden");
+        // Show the correct lobby
+        const isHost = currentPlayerId === hostId && hostId !== null;
+
+        const lobbyElement = document.getElementById(
+            isHost ? "host-lobby" : "join-lobby"
+        );
+
+        lobbyElement.classList.remove("hidden");
 
         // Display game code and status
-        document.getElementById("lobby-game-code").textContent =
-            data.gameCode;
+        const gameCodeElement = document.getElementById(
+            isHost ? "lobby-game-code" : "join-lobby-game-code"
+        );
+        gameCodeElement.textContent = data.gameCode;
 
-        document.getElementById("lobby-status").textContent =
-            `Status: ${data.status}`;
+        const statusElement = document.getElementById(
+            isHost ? "lobby-status" : "join-lobby-status"
+        );
+        statusElement.textContent = `Status: ${data.status}`;
 
         // Display current round
+        if(isHost){
         document.getElementById("lobby-round").textContent =
             data.status === "waiting"
                 ? "Round: Waiting to start"
                 : `Round: ${data.currentRound}`;
+        }
 
         // Find the timestamp selector
         const selector = data.players.find(function (player) {
@@ -180,13 +197,17 @@ async function loadRoomLobby(gameCode) {
         });
 
         // Display selector name
+        if(isHost){
         document.getElementById("lobby-selector").textContent =
             selector
                 ? `Timestamp Selector: ${selector.name}`
                 : "Timestamp Selector: Not assigned";
-                
+        }
+
         // Get the player list element
-        const playerList = document.getElementById("player-list");
+        const playerList = document.getElementById(
+            isHost? "player-list" : "join-player-list"
+        );
 
         // Clear the previous player list
         playerList.innerHTML = "";
@@ -205,31 +226,32 @@ async function loadRoomLobby(gameCode) {
         const startButton =
             document.getElementById("start-game-button");
 
-        if (currentPlayerId === hostId && hostId !== null) {
-            startButton.classList.remove("hidden");
-        } else {
-            startButton.classList.add("hidden");
+        if (startButton) {
+            if (isHost) {
+                startButton.classList.remove("hidden");
+            } else {
+                startButton.classList.add("hidden");
+            }
         }
 
-        // Show Next Round button only to the host during a game
-        const nextRoundButton =
-            document.getElementById("next-round-button");
+        } catch (error) {
+            console.error("Lobby error:", error);
 
-        if (currentPlayerId === hostId && hostId !== null &&
-            data.status === "playing") {
+            if (error.message === "Unable to load room." ||
+                error.message === "Room not found.") {
 
-            nextRoundButton.classList.remove("hidden");
+                if (lobbyInterval !== null) {
+                    clearInterval(lobbyInterval);
+                    lobbyInterval = null;
+                }
 
-        } else {
+                alert("The room has been closed by the host.");
+                window.location.href = "/";
+                return;
+            }
 
-            nextRoundButton.classList.add("hidden");
-
+            alert(error.message);
         }
-
-    } catch (error) {
-        console.error("Lobby error:", error);
-        alert(error.message);
-    }
 }
 
 let lobbyInterval = null;
@@ -247,7 +269,7 @@ function startLobbyPolling(gameCode) {
 }
 
 const startGameButton = document.getElementById("start-game-button");
-
+if(startGameButton){
 startGameButton.addEventListener("click", async function () {
 
     try {
@@ -274,10 +296,10 @@ startGameButton.addEventListener("click", async function () {
         alert(error.message);
     }
 });
-
+}
 
 const nextRoundButton = document.getElementById("next-round-button");
-
+if(nextRoundButton){
 nextRoundButton.addEventListener("click", async function () {
 
     try {
@@ -311,3 +333,90 @@ nextRoundButton.addEventListener("click", async function () {
     }
 
 });
+}
+
+const exitRoomButton = document.getElementById("exit-room-button");
+if (exitRoomButton) {
+    exitRoomButton.addEventListener("click", async function () {
+        try {
+            const response = await fetch(`/api/rooms/${gameCode}/leave`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    playerId: currentPlayerId
+                })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || "Unable to leave room.");
+            }
+
+            // Stop lobby updates
+            if (lobbyInterval !== null) {
+                clearInterval(lobbyInterval);
+                lobbyInterval = null;
+            }
+
+            // Reset player information
+            currentPlayerId = null;
+            gameCode = null;
+
+            // Return to the join form
+            document.getElementById("join-lobby").classList.add("hidden");
+            joinForm.classList.remove("hidden");
+
+            alert("You have left the room.");
+
+        } catch (error) {
+            alert(error.message);
+        }
+    });
+}
+
+const deleteRoomButton = document.getElementById("delete-room-button");
+if (deleteRoomButton) {
+    deleteRoomButton.addEventListener("click", async function () {
+
+        const confirmed = confirm(
+            "Are you sure you want to delete this room?"
+        );
+
+        if (!confirmed) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/rooms/${gameCode}`, {
+                method: "DELETE",
+                headers: {
+                    "Authorization": `Bearer ${hostToken}`
+                }
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(
+                    data.error || "Unable to delete room."
+                );
+            }
+
+            // Stop lobby polling
+            if (lobbyInterval !== null) {
+                clearInterval(lobbyInterval);
+                lobbyInterval = null;
+            }
+
+            alert("Room deleted successfully.");
+
+            window.location.href = "/";
+
+        } catch (error) {
+            alert(error.message);
+        }
+    });
+}

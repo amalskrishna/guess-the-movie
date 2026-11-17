@@ -398,6 +398,48 @@ app.post("/api/rooms/:gameCode/join", function (request, response) {
     });
 });
 
+// Player leaves a room
+app.post("/api/rooms/:gameCode/leave", (req, res) => {
+    const gameCode = req.params.gameCode.toUpperCase();
+    const { playerId } = req.body;
+
+    const room = rooms.get(gameCode);
+
+    if (!room) {
+        return res.status(404).json({
+            error: "Room not found."
+        });
+    }
+
+    if (room.status !== "waiting") {
+        return res.status(400).json({
+            error: "Cannot leave after the game has started."
+        });
+    }
+
+    if (playerId === room.hostId) {
+        return res.status(400).json({
+            error: "The host must delete the room instead."
+        });
+    }
+
+    const playerIndex = room.players.findIndex(
+        player => player.id === playerId
+    );
+
+    if (playerIndex === -1) {
+        return res.status(404).json({
+            error: "Player not found in this room."
+        });
+    }
+
+    room.players.splice(playerIndex, 1);
+
+    res.json({
+        success: true,
+        message: "You have left the room."
+    });
+});
 
 // Get room information
 app.get("/api/rooms/:gameCode", function (request, response) {
@@ -478,6 +520,36 @@ app.post("/api/rooms/:gameCode/start", function (request, response) {
     });
 });
 
+// Host deletes the room
+app.delete("/api/rooms/:gameCode", (req, res) => {
+    const gameCode = req.params.gameCode.toUpperCase();
+    const authorization = req.headers.authorization;
+
+    const room = rooms.get(gameCode);
+
+    if (!room) {
+        return res.status(404).json({
+            error: "Room not found."
+        });
+    }
+
+    const token = authorization?.startsWith("Bearer ")
+        ? authorization.slice(7)
+        : null;
+
+    if (token !== room.hostToken) {
+        return res.status(403).json({
+            error: "Only the host can delete this room."
+        });
+    }
+
+    rooms.delete(gameCode);
+
+    res.json({
+        success: true,
+        message: "Room deleted successfully."
+    });
+});
 
 // Move to the next round
 app.post("/api/rooms/:gameCode/next-round", function (request, response) {
