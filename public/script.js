@@ -1,4 +1,5 @@
 let gameCode = null;
+let hostId = null;
 const form = document.getElementById("capture-form");
 
 form.addEventListener("submit", async function (event) {
@@ -74,6 +75,7 @@ movieForm.addEventListener("submit", async function (event) {
         const data = await response.json();
         console.log(data);
         gameCode = data.gameCode;
+        hostId = data.hostId;
 
         if (!response.ok) {
             throw new Error(data.error || "Movie generation failed.");

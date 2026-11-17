@@ -314,6 +314,7 @@ app.post("/api/generate-movies", async function (request, response) {
             success: true,
             message: "Game room generated successfully!",
             gameCode: gameCode,
+            hostId: hostId,
             totalMovies: movieList.movies.length
         });
 
