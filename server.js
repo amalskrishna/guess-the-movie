@@ -1,5 +1,6 @@
 const express = require("express");
 const { chromium } = require("playwright");
+const crypto = require("crypto");
 require("dotenv").config();
 const { GoogleGenAI } = require("@google/genai");
 const ai = new GoogleGenAI({
@@ -263,7 +264,6 @@ app.post("/api/generate-movies", async function (request, response) {
 
         });
 
-        
         const movieList = JSON.parse(result.text);
 
         // Check that the movies property is an array
@@ -306,10 +306,12 @@ app.post("/api/generate-movies", async function (request, response) {
         }
         while (rooms.has(gameCode));
 
-        const hostId = Math.random().toString(36).substring(2,12);
+        const hostId = crypto.randomUUID();
+        const hostToken = crypto.randomBytes(32).toString("hex");
         // Create a room 
         rooms.set(gameCode, {
             hostId: hostId,
+            hostToken: hostToken,
             players: [
                 {
                     id: hostId,
@@ -329,6 +331,7 @@ app.post("/api/generate-movies", async function (request, response) {
             message: "Game room generated successfully!",
             gameCode: gameCode,
             hostId: hostId,
+            hostToken: hostToken,
             totalMovies: movieList.movies.length
         });
 
@@ -372,7 +375,7 @@ app.post("/api/rooms/:gameCode/join", function (request, response) {
     }
 
     // Create a unique player ID
-    const playerId = Math.random().toString(36).substring(2, 12);
+    const playerId = crypto.randomUUID();
 
     // Add player to the room
     room.players.push({
@@ -429,8 +432,10 @@ app.get("/api/rooms/:gameCode", function (request, response) {
 // Start a game
 app.post("/api/rooms/:gameCode/start", function (request, response) {
     const gameCode = request.params.gameCode.toUpperCase();
-    const { playerId } = request.body;
-
+    const authorization = request.headers.authorization;
+    const providedToken = authorization
+        ? authorization.replace("Bearer ", "")
+        : null;
     // Find the room
     const room = rooms.get(gameCode);
 
@@ -441,12 +446,11 @@ app.post("/api/rooms/:gameCode/start", function (request, response) {
     }
 
     // Check whether the requester is the host
-    if (playerId !== room.hostId) {
+    if (providedToken !== room.hostToken) {
         return response.status(403).json({
             error: "Only the host can start the game."
         });
     }
-
     // Check room status
     if (room.status !== "waiting") {
         return response.status(400).json({

@@ -1,6 +1,7 @@
 let gameCode = null;
 let hostId = null;
 let currentPlayerId = null;
+let hostToken = null;
 const form = document.getElementById("capture-form");
 
 form.addEventListener("submit", async function (event) {
@@ -78,6 +79,7 @@ movieForm.addEventListener("submit", async function (event) {
         gameCode = data.gameCode;
         hostId = data.hostId;
         currentPlayerId = hostId;
+        hostToken = data.hostToken;
         loadRoomLobby(gameCode);
         startLobbyPolling(gameCode);
 
@@ -252,11 +254,9 @@ startGameButton.addEventListener("click", async function () {
         const response = await fetch(`/api/rooms/${gameCode}/start`, {
             method: "POST",
             headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                playerId: currentPlayerId
-            })
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${hostToken}`
+            }
         });
 
         const data = await response.json();

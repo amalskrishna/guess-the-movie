@@ -45,16 +45,30 @@ async function testNextRound() {
     }
 
     console.log("Sam joined:", joined.playerId);
-
-    // Start the game
-    const startResponse = await fetch(`${BASE_URL}/api/rooms/${gameCode}/start`, {
+// Try starting the game without the host token
+const unauthorizedResponse = await fetch(
+    `${BASE_URL}/api/rooms/${gameCode}/start`,
+    {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
         },
         body: JSON.stringify({
-            playerId: hostId
+            playerId: joined.playerId
         })
+    }
+);
+
+const unauthorized = await unauthorizedResponse.json();
+
+console.log("Unauthorized start attempt:", unauthorizedResponse.status);
+console.log(unauthorized);
+    // Start the game
+    const startResponse = await fetch(`${BASE_URL}/api/rooms/${gameCode}/start`, {
+        method: "POST",
+        headers: {
+            "Authorization": `Bearer ${game.hostToken}`
+        }
     });
 
     const started = await startResponse.json();
