@@ -166,6 +166,23 @@ async function loadRoomLobby(gameCode) {
         document.getElementById("lobby-status").textContent =
             `Status: ${data.status}`;
 
+        // Display current round
+        document.getElementById("lobby-round").textContent =
+            data.status === "waiting"
+                ? "Round: Waiting to start"
+                : `Round: ${data.currentRound}`;
+
+        // Find the timestamp selector
+        const selector = data.players.find(function (player) {
+            return player.id === data.currentSelectorId;
+        });
+
+        // Display selector name
+        document.getElementById("lobby-selector").textContent =
+            selector
+                ? `Timestamp Selector: ${selector.name}`
+                : "Timestamp Selector: Not assigned";
+                
         // Get the player list element
         const playerList = document.getElementById("player-list");
 
@@ -192,6 +209,21 @@ async function loadRoomLobby(gameCode) {
             startButton.classList.add("hidden");
         }
 
+        // Show Next Round button only to the host during a game
+        const nextRoundButton =
+            document.getElementById("next-round-button");
+
+        if (currentPlayerId === hostId && hostId !== null &&
+            data.status === "playing") {
+
+            nextRoundButton.classList.remove("hidden");
+
+        } else {
+
+            nextRoundButton.classList.add("hidden");
+
+        }
+
     } catch (error) {
         console.error("Lobby error:", error);
         alert(error.message);
@@ -211,7 +243,6 @@ function startLobbyPolling(gameCode) {
         loadRoomLobby(gameCode);
     }, 2000);
 }
-
 
 const startGameButton = document.getElementById("start-game-button");
 
@@ -242,4 +273,41 @@ startGameButton.addEventListener("click", async function () {
     } catch (error) {
         alert(error.message);
     }
+});
+
+
+const nextRoundButton = document.getElementById("next-round-button");
+
+nextRoundButton.addEventListener("click", async function () {
+
+    try {
+        nextRoundButton.disabled = true;
+        nextRoundButton.textContent = "Loading...";
+
+        const response = await fetch(`/api/rooms/${gameCode}/next-round`, {
+            method: "POST"
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error || "Unable to advance round.");
+        }
+
+        console.log("Next round:", data);
+
+        // Refresh the lobby
+        await loadRoomLobby(gameCode);
+
+    } catch (error) {
+
+        alert(error.message);
+
+    } finally {
+
+        nextRoundButton.disabled = false;
+        nextRoundButton.textContent = "Next Round";
+
+    }
+
 });

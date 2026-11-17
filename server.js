@@ -134,6 +134,19 @@ async function captureMovieFrame(query, year, timestamp) {
     }
 }
 
+function rotateTimestampSelector(room) {
+
+    // Move to the next player
+    room.currentSelectorIndex =
+        (room.currentSelectorIndex + 1) % room.players.length;
+
+    // Store the next selector's ID
+    room.currentSelectorId =
+        room.players[room.currentSelectorIndex].id;
+
+}
+
+
 // API endpoint
 app.post("/api/capture", async function (request, response) {
     const { query, year, timestamp } = request.body;
@@ -306,6 +319,7 @@ app.post("/api/generate-movies", async function (request, response) {
             ],
             movies: movieList.movies,
             currentMovieIndex: 0,
+            currentSelectorIndex: 0,
             status: "waiting"
         });
 
@@ -401,6 +415,8 @@ app.get("/api/rooms/:gameCode", function (request, response) {
         success: true,
         gameCode: gameCode,
         status: room.status,
+        currentRound: room.currentMovieIndex+1,
+        currentSelectorId: room.currentSelectorId,
         players: room.players.map(player => ({
             id: player.id,
             name: player.name,
@@ -447,12 +463,63 @@ app.post("/api/rooms/:gameCode/start", function (request, response) {
 
     // Start the game
     room.status = "playing";
+    room.currentMovieIndex = 0;
+    room.currentSelectorIndex = 0;
+    room.currentSelectorId = room.players[0].id;
 
     response.json({
         success: true,
         message: "Game started successfully!",
         status: room.status
     });
+});
+
+
+// Move to the next round
+app.post("/api/rooms/:gameCode/next-round", function (request, response) {
+
+    const gameCode = request.params.gameCode.toUpperCase();
+
+    // Find the room
+    const room = rooms.get(gameCode);
+
+    if (!room) {
+        return response.status(404).json({
+            error: "Room not found."
+        });
+    }
+
+    // Make sure the game has started
+    if (room.status !== "playing") {
+        return response.status(400).json({
+            error: "The game is not currently running."
+        });
+    }
+
+    // Check whether there are more movies
+    if (room.currentMovieIndex >= room.movies.length - 1) {
+        room.status = "finished";
+
+        return response.json({
+            success: true,
+            message: "Game finished!",
+            status: room.status
+        });
+    }
+
+    // Move to the next movie
+    room.currentMovieIndex++;
+
+    // Rotate the timestamp selector
+    rotateTimestampSelector(room);
+
+    response.json({
+        success: true,
+        message: "Next round started!",
+        round: room.currentMovieIndex + 1,
+        selectorId: room.currentSelectorId
+    });
+
 });
 
 
