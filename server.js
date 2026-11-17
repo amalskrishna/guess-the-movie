@@ -23,6 +23,9 @@ app.get("/test", function (request, response) {
 
 // Convert timestamp into seconds
 function timestampToSeconds(timestamp) {
+    if(typeof timestamp === "number"){
+        return timestamp;
+    }
     const parts = timestamp.split(":").map(Number);
 
     if (parts.length === 2) {
@@ -45,7 +48,7 @@ async function captureMovieFrame(query, year, timestamp) {
 
         browser = await chromium.launch({
             channel: "chrome",
-            headless: false
+            headless: true
         });
 
         const context = await browser.newContext();
@@ -324,6 +327,7 @@ app.post("/api/generate-movies", async function (request, response) {
                 }
             ],
             movies: movieList.movies,
+            guesses: [],
             currentMovieIndex: 0,
             currentSelectorIndex: 0,
             status: "waiting"
@@ -607,6 +611,45 @@ app.post("/api/rooms/:gameCode/submit-timestamp", async function (request, respo
     response.json({
         success: true,
         message: "Timestamp submitted."
+    });
+});
+
+app.post("/api/rooms/:gameCode/submit-guess", function (request, response) {
+    const gameCode = request.params.gameCode.toUpperCase();
+    const room = rooms.get(gameCode);
+
+    if (!room) {
+        return response.status(404).json({ error: "Room not found." });
+    }
+
+    if (room.status !== "playing") {
+        return response.status(400).json({ error: "The game is not currently playing." });
+    }
+
+    const { playerId, guess } = request.body;
+
+    const player = room.players.find(p => p.id === playerId);
+
+    if (!player) {
+        return response.status(403).json({ error: "You are not in this room." });
+    }
+
+    if (!guess || !guess.trim()) {
+        return response.status(400).json({ error: "Please enter a movie guess." });
+    }
+
+    if (room.guesses.some(g => g.playerId === playerId)) {
+        return response.status(400).json({ error: "You have already submitted your guess." });
+    }
+
+    room.guesses.push({
+        playerId: playerId,
+        guess: guess.trim()
+    });
+
+    response.json({
+        success: true,
+        message: "Guess submitted successfully."
     });
 });
 

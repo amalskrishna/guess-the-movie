@@ -301,6 +301,42 @@ if (submitTimestampButton) {
     });
 }
 
+const submitGuessButton = document.getElementById("submit-guess-button");
+if (submitGuessButton) {
+    submitGuessButton.addEventListener("click", async function () {
+        const guess = document.getElementById("movie-guess").value.trim();
+
+        try {
+            const response = await fetch(
+                `/api/rooms/${gameCode}/submit-guess`,
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        playerId: currentPlayerId,
+                        guess: guess
+                    })
+                }
+            );
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || "Unable to submit guess.");
+            }
+
+            alert("Guess submitted successfully!");
+
+            submitGuessButton.disabled = true;
+
+        } catch (error) {
+            alert(error.message);
+        }
+    });
+}
+
 async function loadRoomLobby(gameCode) {
     try {
         const response = await fetch(`/api/rooms/${gameCode}`);
