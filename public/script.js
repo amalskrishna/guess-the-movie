@@ -91,3 +91,48 @@ movieForm.addEventListener("submit", async function (event) {
         button.textContent = "Generate Movies";
     }
 });
+
+
+const joinForm = document.getElementById("join-form");
+joinForm.addEventListener("submit", async function (event) {
+    event.preventDefault();
+
+    const playerName = document.getElementById("join-player-name").value.trim();
+    const gameCode = document.getElementById("join-game-code").value.trim();
+
+    const results = document.getElementById("join-results");
+    const button = joinForm.querySelector("button");
+
+    button.disabled = true;
+    button.textContent = "Joining...";
+
+    try {
+        const response = await fetch(`/api/rooms/${gameCode}/join`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                playerName: playerName
+            })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error || "Unable to join game.");
+        }
+
+        results.textContent =
+            `Successfully joined game ${data.gameCode}! Welcome, ${playerName}.`;
+
+        console.log("Joined room:", data);
+
+    } catch (error) {
+        results.textContent = "Error: " + error.message;
+
+    } finally {
+        button.disabled = false;
+        button.textContent = "Join Game";
+    }
+});

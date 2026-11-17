@@ -329,6 +329,58 @@ app.post("/api/generate-movies", async function (request, response) {
 });
 
 
+// Join an existing room
+app.post("/api/rooms/:gameCode/join", function (request, response) {
+    const gameCode = request.params.gameCode.toUpperCase();
+    const { playerName } = request.body;
+
+    // Check player name
+    if (!playerName || playerName.trim() === "") {
+        return response.status(400).json({
+            error: "Player name is required."
+        });
+    }
+
+    // Find the room
+    const room = rooms.get(gameCode);
+
+    if (!room) {
+        return response.status(404).json({
+            error: "Room not found."
+        });
+    }
+
+    // Only allow joining while waiting
+    if (room.status !== "waiting") {
+        return response.status(400).json({
+            error: "This game has already started."
+        });
+    }
+
+    // Create a unique player ID
+    const playerId = Math.random().toString(36).substring(2, 12);
+
+    // Add player to the room
+    room.players.push({
+        id: playerId,
+        name: playerName.trim(),
+        isHost: false
+    });
+
+    // Send safe room information to the player
+    response.json({
+        success: true,
+        message: "Joined room successfully!",
+        gameCode: gameCode,
+        playerId: playerId,
+        players: room.players.map(player => ({
+            id: player.id,
+            name: player.name,
+            isHost: player.isHost
+        }))
+    });
+});
+
 app.listen(PORT, function () {
     console.log(`Server running at http://localhost:${PORT}`);
 });
