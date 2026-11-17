@@ -1,17 +1,36 @@
 const socket = io();
+let gameCode = null;
+let hostId = null;
+let currentPlayerId = null;
+let hostToken = null;
+let currentSelectorId = null;
+const urlParams = new URLSearchParams(window.location.search);
+const roomCodeFromUrl = urlParams.get("room");
+const playerIdFromUrl = urlParams.get("player");
+if(playerIdFromUrl){
+    currentPlayerId=playerIdFromUrl;
+}
+if(roomCodeFromUrl){
+    gameCode = roomCodeFromUrl;
+}
+if (gameCode && document.getElementById("game-round")) {
+    socket.emit("join-game-room", gameCode);
+    loadGameState();
+}
+
 socket.on("lobby-updated", ()=>{
     if (gameCode) {
         loadRoomLobby(gameCode);
     }
 });
 socket.on("game-started", () => {
-    window.location.href = `/game.html?room=${gameCode}`;
+    window.location.href = `/game.html?room=${gameCode}&player=${currentPlayerId}`;
+});
+socket.on("room-deleted", () => {
+    alert("The host has deleted this room.");
+    window.location.href = "/";
 });
 
-let gameCode = null;
-let hostId = null;
-let currentPlayerId = null;
-let hostToken = null;
 const form = document.getElementById("capture-form");
 
 if (form) {
@@ -163,6 +182,44 @@ joinForm.addEventListener("submit", async function (event) {
 });
 }
 
+async function loadGameState() {
+    try {
+        const response = await fetch(`/api/rooms/${gameCode}`);
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error || "Unable to load game.");
+        }
+
+        currentSelectorId = data.currentSelectorId;
+console.log("Current player ID:", currentPlayerId);
+console.log("Current selector ID:", data.currentSelectorId);
+console.log("Selector name:", data.currentSelectorName);
+        document.getElementById("game-round").textContent =
+            `Round ${data.currentRound} of ${data.totalRounds}`;
+        const selectorElement = document.getElementById("timestamp-section");
+        if (data.currentSelectorId === currentPlayerId) {
+            selectorElement.classList.remove("hidden");
+        } else {
+            selectorElement.classList.add("hidden");
+        }
+
+        const selectorMessage = document.getElementById("selector-message");
+        if (data.currentSelectorId === currentPlayerId) {
+            selectorMessage.textContent = "You are selecting the timestamp!";
+        } else {
+            selectorMessage.textContent =
+                `Waiting for ${data.currentSelectorName} to select a timestamp...`;
+        }
+
+        console.log("Game state:", data);
+
+    } catch (error) {
+        console.error("Game loading error:", error);
+        alert(error.message);
+    }
+}
+
 async function loadRoomLobby(gameCode) {
     try {
         const response = await fetch(`/api/rooms/${gameCode}`);
@@ -259,7 +316,6 @@ async function loadRoomLobby(gameCode) {
             alert(error.message);
         }
 }
-
 
 const startGameButton = document.getElementById("start-game-button");
 if(startGameButton){
@@ -396,6 +452,27 @@ if (deleteRoomButton) {
 
         } catch (error) {
             alert(error.message);
+        }
+    });
+}
+
+
+const copyCodeButton = document.getElementById("copy-code-button");
+if (copyCodeButton) {
+    copyCodeButton.addEventListener("click", async function () {
+        try {
+            const roomCode = document.getElementById("lobby-game-code").textContent;
+
+            await navigator.clipboard.writeText(roomCode);
+
+            copyCodeButton.textContent = "Copied!";
+
+            setTimeout(() => {
+                copyCodeButton.textContent = "Copy Code";
+            }, 2000);
+
+        } catch (error) {
+            alert("Unable to copy room code.");
         }
     });
 }

@@ -467,7 +467,11 @@ app.get("/api/rooms/:gameCode", function (request, response) {
         gameCode: gameCode,
         status: room.status,
         currentRound: room.currentMovieIndex+1,
+        totalRounds: room.movies.length,
         currentSelectorId: room.currentSelectorId,
+        currentSelectorName: room.players.find(
+            player => player.id === room.currentSelectorId
+        )?.name || null,
         players: room.players.map(player => ({
             id: player.id,
             name: player.name,
@@ -549,7 +553,7 @@ app.delete("/api/rooms/:gameCode", (req, res) => {
             error: "Only the host can delete this room."
         });
     }
-
+    io.to(gameCode).emit("room-deleted");
     rooms.delete(gameCode);
 
     res.json({
