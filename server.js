@@ -8,7 +8,7 @@ const ai = new GoogleGenAI({
 
 const app = express();
 const PORT = 3000;
-const generatedMovieLists = new Map();
+const rooms = new Map();
 
 app.use(express.json());
 app.use(express.static("public"));
@@ -287,19 +287,26 @@ app.post("/api/generate-movies", async function (request, response) {
 
 
         // Generate a unique ID for this movie list
-        const listId = Math.random().toString(36).substring(2, 10).toUpperCase();
+        let gameCode;
+        do{
+            gameCode = Math.random().toString(36).substring(2,8).toUpperCase(); 
+        }
+        while (rooms.has(gameCode));
 
-        // Store the complete movie list privately
-        generatedMovieLists.set(listId, {
+        // Create a room 
+        rooms.set(gameCode, {
+            hostId: null,
+            players: [],
             movies: movieList.movies,
-            currentMovieIndex: 0
+            currentMovieIndex: 0,
+            status: "waiting"
         });
 
-        // Only send the list ID and success message to the frontend
+        // Send game code to frontend
         response.json({
             success: true,
-            message: "Movie list generated successfully!",
-            listId: listId,
+            message: "Game room generated successfully!",
+            gameCode: gameCode,
             totalMovies: movieList.movies.length
         });
 

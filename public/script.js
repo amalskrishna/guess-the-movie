@@ -72,7 +72,7 @@ movieForm.addEventListener("submit", async function (event) {
         });
 
         const data = await response.json();
-        generatedListId = data.listId;
+        console.log(data);
 
         if (!response.ok) {
             throw new Error(data.error || "Movie generation failed.");
