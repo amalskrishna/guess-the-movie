@@ -1,4 +1,4 @@
-let generatedListId = null;
+let gameCode = null;
 const form = document.getElementById("capture-form");
 
 form.addEventListener("submit", async function (event) {
@@ -43,12 +43,11 @@ form.addEventListener("submit", async function (event) {
 });
 
 
-
 const movieForm = document.getElementById("movie-form");
-
 movieForm.addEventListener("submit", async function (event) {
     event.preventDefault();
 
+    const hostName = document.getElementById("host-name").value.trim();
     const prompt = document.getElementById("movie-prompt").value;
     const count = Number(document.getElementById("movie-count").value);
 
@@ -66,6 +65,7 @@ movieForm.addEventListener("submit", async function (event) {
                 "Content-Type": "application/json"
             },
             body: JSON.stringify({
+                hostName: hostName,
                 prompt: prompt,
                 count: count
             })
@@ -73,13 +73,14 @@ movieForm.addEventListener("submit", async function (event) {
 
         const data = await response.json();
         console.log(data);
+        gameCode = data.gameCode;
 
         if (!response.ok) {
             throw new Error(data.error || "Movie generation failed.");
         }
 
         results.textContent =
-            `Movie list generated successfully! ${data.totalMovies} rounds are ready.`;
+            `Game created successfully! Game code: ${gameCode}. ${data.totalMovies} rounds are ready.`;
 
     } catch (error) {
         results.textContent = "Error: " + error.message;

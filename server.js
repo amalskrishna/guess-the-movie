@@ -187,7 +187,7 @@ app.get("/api/test-gemini", async function (request, response) {
 
 app.post("/api/generate-movies", async function (request, response) {
     try {
-        const { prompt, count } = request.body;
+        const { hostName, prompt, count } = request.body;
         const strategies = [
             "Explore lesser-known but highly relevant movies.",
             "Prioritize movies from different decades.",
@@ -293,10 +293,17 @@ app.post("/api/generate-movies", async function (request, response) {
         }
         while (rooms.has(gameCode));
 
+        const hostId = Math.random().toString(36).substring(2,12);
         // Create a room 
         rooms.set(gameCode, {
-            hostId: null,
-            players: [],
+            hostId: hostId,
+            players: [
+                {
+                    id: hostId,
+                    name: hostName.trim(),
+                    isHost: true
+                }
+            ],
             movies: movieList.movies,
             currentMovieIndex: 0,
             status: "waiting"
