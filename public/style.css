@@ -1,64 +1,351 @@
-* {
-    box-sizing: border-box;
+
+/* Homepage */
+
+.home-container {
+    max-width: 900px;
+    margin: 100px auto;
+    padding: 20px;
+    text-align: center;
 }
 
-body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-    background: #f4f4f4;
+.home-container h1 {
+    font-size: 42px;
+    margin-bottom: 15px;
 }
 
-.container {
-    width: 90%;
-    max-width: 600px;
-    margin: 80px auto;
-    padding: 30px;
-
-    background: white;
-    border-radius: 10px;
+.home-container > p {
+    color: #777;
+    font-size: 18px;
+    margin-bottom: 50px;
 }
 
-h1 {
+.home-options {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+}
+
+.home-card {
+    display: block;
+    width: 250px;
+    padding: 35px 20px;
+    border: 1px solid #ccc;
+    border-radius: 12px;
+    text-decoration: none;
+    color: inherit;
+    transition: 0.2s;
+}
+
+.home-card:hover {
+    transform: translateY(-5px);
+    border-color: #777;
+}
+
+.home-card h2 {
+    margin-bottom: 12px;
+}
+
+.home-card p {
+    color: #777;
+}
+
+/* Mobile layout */
+
+@media (max-width: 600px) {
+    .home-options {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .home-card {
+        width: 80%;
+    }
+}
+
+
+/* Host Page */
+
+.host-container {
+    max-width: 1100px;
+    margin: 50px auto;
+    padding: 20px;
+}
+
+.host-container > h1 {
+    text-align: center;
+    margin-bottom: 35px;
+}
+
+.host-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 25px;
+    align-items: start;
+}
+
+.host-lobby,
+.host-settings {
+    padding: 25px;
+    border: 1px solid #ccc;
+    border-radius: 12px;
+}
+
+.host-lobby h2,
+.host-settings h2 {
+    margin-top: 0;
+    margin-bottom: 25px;
+}
+
+.room-code {
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.room-code p {
     margin-top: 0;
 }
 
-.description {
-    color: #666;
+#lobby-game-code {
+    font-size: 24px;
+    letter-spacing: 3px;
 }
 
-form {
+.host-settings form {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 12px;
 }
 
-label {
-    margin-top: 10px;
-    font-weight: bold;
+.host-settings input {
+    padding: 10px;
+    margin-bottom: 10px;
 }
 
-input {
-    padding: 12px;
-    font-size: 16px;
-}
-
-button {
-    margin-top: 15px;
-    padding: 12px;
-
-    font-size: 16px;
+.host-settings button,
+.host-lobby button {
+    padding: 10px 15px;
     cursor: pointer;
 }
 
-.result {
-    margin-top: 30px;
+#start-game-button {
+    width: 100%;
+    margin-top: 20px;
 }
 
-.result img {
-    width: 100%;
-    margin-top: 10px;
+.host-container > a {
+    display: inline-block;
+    margin-top: 25px;
 }
+
+/* Mobile layout */
+
+@media (max-width: 700px) {
+    .host-layout {
+        grid-template-columns: 1fr;
+    }
+}
+
+
+/* Join Page */
+
+.join-container {
+    max-width: 500px;
+    margin: 70px auto;
+    padding: 20px;
+    text-align: center;
+}
+
+.join-container > p {
+    color: #777;
+    margin-bottom: 30px;
+}
+
+#join-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    text-align: left;
+    padding: 25px;
+    border: 1px solid #ccc;
+    border-radius: 12px;
+}
+
+#join-form input {
+    padding: 12px;
+    margin-bottom: 10px;
+}
+
+#join-form button {
+    padding: 12px;
+    cursor: pointer;
+}
+
+#join-lobby {
+    margin-top: 30px;
+    padding: 25px;
+    border: 1px solid #ccc;
+    border-radius: 12px;
+    text-align: left;
+}
+
+#join-lobby h2 {
+    margin-top: 0;
+}
+
+#exit-room-button {
+    padding: 10px 15px;
+    cursor: pointer;
+}
+
+.join-container > a {
+    display: inline-block;
+    margin-top: 25px;
+}
+
+/* Utility class */
 
 .hidden {
     display: none;
+}
+
+
+/* Gameplay Page */
+
+.game-container {
+    max-width: 1200px;
+    margin: 30px auto;
+    padding: 20px;
+}
+
+.game-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.game-content {
+    display: grid;
+    grid-template-columns: 3fr 1fr;
+    gap: 25px;
+    align-items: start;
+}
+
+.movie-section,
+.game-sidebar {
+    padding: 25px;
+    border: 1px solid #ccc;
+    border-radius: 12px;
+}
+
+.movie-section {
+    text-align: center;
+}
+
+#movie-frame {
+    display: block;
+    width: 100%;
+    max-height: 500px;
+    object-fit: contain;
+    margin: 20px auto;
+}
+
+#timestamp-section,
+#guess-section {
+    margin-top: 25px;
+}
+
+#timestamp-slider {
+    width: 100%;
+}
+
+#movie-guess {
+    padding: 12px;
+    width: 70%;
+    max-width: 350px;
+}
+
+.movie-section button {
+    padding: 10px 15px;
+    margin-top: 10px;
+    cursor: pointer;
+}
+
+.game-sidebar ul {
+    padding-left: 20px;
+}
+
+#answer-reveal {
+    margin-top: 25px;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+}
+
+/* Mobile layout */
+
+@media (max-width: 700px) {
+    .game-content {
+        grid-template-columns: 1fr;
+    }
+}
+
+
+/* Leaderboard Page */
+
+.leaderboard-container {
+    max-width: 850px;
+    margin: 60px auto;
+    padding: 20px;
+    text-align: center;
+}
+
+.winner-section {
+    margin: 35px 0;
+    padding: 25px;
+    border: 1px solid #ccc;
+    border-radius: 12px;
+}
+
+.winner-section h3 {
+    font-size: 28px;
+}
+
+.leaderboard-section {
+    margin-top: 30px;
+}
+
+.leaderboard-section table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+.leaderboard-section th,
+.leaderboard-section td {
+    padding: 15px;
+    border: 1px solid #ccc;
+    text-align: center;
+}
+
+.leaderboard-section th {
+    background-color: #eee;
+}
+
+#return-home-button {
+    margin-top: 30px;
+    padding: 12px 25px;
+    cursor: pointer;
+}
+
+/* Mobile layout */
+
+@media (max-width: 600px) {
+    .leaderboard-section {
+        overflow-x: auto;
+    }
+
+    .leaderboard-section table {
+        min-width: 550px;
+    }
 }

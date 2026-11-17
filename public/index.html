@@ -1,122 +1,32 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Video Frame Capture</title>
+    <title>Guess the Movie</title>
     <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
-    <main class="container">
-        <section class="movie-generator">
-            <h2>Generate Movie List</h2>
-            <form id="movie-form">
-                <label for="host-name">Your Name</label>
-                <input
-                    type="text"
-                    id="host-name"
-                    placeholder="Enter your name"
-                    required
-                >
-                <label for="movie-prompt">Genre, Collection or Custom Request</label>
-                <input
-                    type="text"
-                    id="movie-prompt"
-                    placeholder="e.g. Marvel movies or Science fiction"
-                    required
-                >
-                <label for="movie-count">Number of Rounds</label>
-                <input
-                    type="number"
-                    id="movie-count"
-                    min="1"
-                    max="30"
-                    value="10"
-                    required
-                >
-                <button type="submit">Generate Movies</button>
-            </form>
-            <div id="movie-results"></div>
-        </section>
+    <main class="home-container">
+        <h1>GUESS THE MOVIE</h1>
 
-        <section class="join-room">
-            <h2>Join a Game</h2>
-            <form id="join-form">
-                <label for="join-player-name">Your Name</label>
-                <input
-                    type="text"
-                    id="join-player-name"
-                    placeholder="Enter your name"
-                    required
-                >
-                <label for="join-game-code">Game Code</label>
-                <input
-                    type="text"
-                    id="join-game-code"
-                    placeholder="e.g. ABC123"
-                    required
-                >
-                <button type="submit">Join Game</button>
-            </form>
-
-            <div id="join-results"></div>
-        </section>
-
-        <section class="room-lobby hidden" id="room-lobby">
-            <h2>Game Lobby</h2>
-            <p>
-                Game Code: <strong id="lobby-game-code"></strong>
-            </p>
-            <p id="lobby-status">Waiting for players...</p>
-            <p id="lobby-round">Round: Waiting to start</p>
-            <p id="lobby-selector">Timestamp Selector: Not assigned</p>
-
-            <h3>Players</h3>
-            <ul id="player-list"></ul>
-
-            <button id="start-game-button" class="hidden">
-                Start Game
-            </button>
-            <button id="next-round-button" class="hidden">
-                Next round
-            </button>
-        </section>
-
-        <h1>Video Frame Capture</h1>
-        <p class="description">
-            Search for a video and capture a frame at a specific timestamp.
+        <p>
+            Watch a frame, guess the movie, and compete with your friends!
         </p>
-        <form id="capture-form">
-            <label for="search-query">
-                Video Search Query
-            </label>
-            <input
-                type="text"
-                id="search-query"
-                placeholder="e.g. The Avengers"
-                required
-            >
-            <label for="movie-year">Movie Year</label>
-            <input type="number" id="movie-year" placeholder="e.g. 2012" required>
-            <label for="timestamp">
-                Timestamp
-            </label>
-            <input
-                type="text"
-                id="timestamp"
-                placeholder="e.g. 02:35"
-                required
-            >
-            <button type="submit">
-                Capture Frame
-            </button>
-        </form>
-        <section id="result" class="result hidden">
-            <h2>Captured Frame</h2>
-            <img id="screenshot" src="" alt="Captured video frame">
-        </section>
+
+        <div class="home-options">
+            <a href="host.html" class="home-card">
+                <h2>HOST</h2>
+                <p>Create a room and invite your friends.</p>
+            </a>
+
+            <a href="join.html" class="home-card">
+                <h2>JOIN</h2>
+                <p>Enter a room code and join the game.</p>
+            </a>
+        </div>
     </main>
-    <script src="script.js"></script>
 </body>
 </html>

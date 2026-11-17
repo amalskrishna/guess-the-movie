@@ -1,0 +1,63 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Join a Game</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <main class="join-container">
+
+        <h1>Join a Game</h1>
+        <p>Enter your name and the room code to join your friends.</p>
+
+        <form id="join-form">
+
+            <label for="join-player-name">Your Name</label>
+            <input
+                type="text"
+                id="join-player-name"
+                placeholder="Enter your name"
+                required
+            >
+
+            <label for="join-game-code">Room Code</label>
+            <input
+                type="text"
+                id="join-game-code"
+                placeholder="Enter room code"
+                required
+            >
+
+            <button type="submit">Join Room</button>
+
+        </form>
+
+        <section id="join-lobby" class="hidden">
+
+            <h2>Game Lobby</h2>
+
+            <p>
+                Room Code:
+                <strong id="join-lobby-game-code"></strong>
+            </p>
+
+            <p id="join-lobby-status">Waiting for host to start...</p>
+
+            <h3>Players</h3>
+            <ul id="join-player-list"></ul>
+
+            <button id="exit-room-button">Exit Room</button>
+
+        </section>
+
+        <a href="index.html">Back to Home</a>
+
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>

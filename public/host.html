@@ -1,0 +1,72 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Host a Game</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <main class="host-container">
+        <h1>Host a Game</h1>
+        <div class="host-layout">
+            <!-- Left side: Lobby -->
+            <section class="host-lobby">
+                <h2>Game Lobby</h2>
+                <div class="room-code">
+                    <p>Room Code</p>
+                    <strong id="lobby-game-code">------</strong>
+                    <button id="copy-code-button">Copy Code</button>
+                </div>
+                <p id="lobby-status">Waiting for players...</p>
+                <h3>Players</h3>
+                <ul id="player-list">
+                    <li>Waiting for players...</li>
+                </ul>
+                <button id="delete-room-button">Delete Room</button>
+            </section>
+
+            <!-- Right side: Settings -->
+            <section class="host-settings">
+                <h2>Game Settings</h2>
+                <form id="movie-form">
+                    <label for="host-name">Your Name</label>
+                    <input
+                        type="text"
+                        id="host-name"
+                        placeholder="Enter your name"
+                        required
+                    >
+                    <label for="movie-prompt">
+                        Movie Category or Custom Request
+                    </label>
+                    <input
+                        type="text"
+                        id="movie-prompt"
+                        placeholder="e.g. Marvel movies"
+                        required
+                    >
+                    <label for="movie-count">Number of Rounds</label>
+                    <input
+                        type="number"
+                        id="movie-count"
+                        min="1"
+                        max="30"
+                        value="10"
+                        required
+                    >
+                    <button type="submit">Create Room</button>
+                </form>
+                <button id="start-game-button" disabled>
+                    Start Game
+                </button>
+                <div id="movie-results"></div>
+            </section>
+        </div>
+        <a href="index.html">Back to Home</a>
+    </main>
+    <script src="script.js"></script>
+</body>
+</html>

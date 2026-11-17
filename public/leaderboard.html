@@ -1,0 +1,49 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Results - Guess the Movie</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <main class="leaderboard-container">
+
+        <h1>GAME OVER!</h1>
+        <p>Here are the final results.</p>
+
+        <section class="winner-section">
+            <h2>🏆 Winner</h2>
+            <h3 id="winner-name">Waiting for results...</h3>
+        </section>
+
+        <section class="leaderboard-section">
+            <h2>Leaderboard</h2>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Rank</th>
+                        <th>Player</th>
+                        <th>Score</th>
+                        <th>Response Time</th>
+                    </tr>
+                </thead>
+
+                <tbody id="leaderboard-body">
+                    <!-- Results will be inserted here -->
+                </tbody>
+            </table>
+        </section>
+
+        <button id="return-home-button">
+            Return to Home
+        </button>
+
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>

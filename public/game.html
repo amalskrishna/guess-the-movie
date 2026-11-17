@@ -1,0 +1,77 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guess the Movie - Game</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <main class="game-container">
+
+        <header class="game-header">
+            <h1>GUESS THE MOVIE</h1>
+            <p id="game-round">Round 1</p>
+            <p id="game-timer">Waiting to start...</p>
+        </header>
+
+        <section class="game-content">
+
+            <!-- Movie frame and guessing area -->
+            <div class="movie-section">
+                <h2>Guess the Movie</h2>
+
+                <img
+                    id="movie-frame"
+                    src=""
+                    alt="Captured movie frame"
+                >
+
+                <div id="timestamp-section" class="hidden">
+                    <h3>Choose a Timestamp</h3>
+                    <input
+                        type="range"
+                        id="timestamp-slider"
+                        min="0"
+                        max="100"
+                        value="50"
+                    >
+                    <p id="selected-timestamp">00:00:00</p>
+                    <button id="submit-timestamp-button">
+                        Submit Timestamp
+                    </button>
+                </div>
+
+                <div id="guess-section" class="hidden">
+                    <h3>Enter Your Guess</h3>
+                    <input
+                        type="text"
+                        id="movie-guess"
+                        placeholder="Enter movie title"
+                    >
+                    <button id="submit-guess-button">
+                        Submit Guess
+                    </button>
+                </div>
+
+                <div id="answer-reveal" class="hidden">
+                    <h2 id="correct-movie"></h2>
+                    <p id="round-result"></p>
+                </div>
+            </div>
+
+            <!-- Players and scores -->
+            <aside class="game-sidebar">
+                <h2>Players</h2>
+                <ul id="game-player-list"></ul>
+            </aside>
+
+        </section>
+
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>
