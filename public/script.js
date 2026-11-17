@@ -1,5 +1,6 @@
 let gameCode = null;
 let hostId = null;
+let currentPlayerId = null;
 const form = document.getElementById("capture-form");
 
 form.addEventListener("submit", async function (event) {
@@ -76,6 +77,9 @@ movieForm.addEventListener("submit", async function (event) {
         console.log(data);
         gameCode = data.gameCode;
         hostId = data.hostId;
+        currentPlayerId = hostId;
+        loadRoomLobby(gameCode);
+        startLobbyPolling(gameCode);
 
         if (!response.ok) {
             throw new Error(data.error || "Movie generation failed.");
@@ -98,7 +102,7 @@ joinForm.addEventListener("submit", async function (event) {
     event.preventDefault();
 
     const playerName = document.getElementById("join-player-name").value.trim();
-    const gameCode = document.getElementById("join-game-code").value.trim();
+    let gameCode = document.getElementById("join-game-code").value.trim();
 
     const results = document.getElementById("join-results");
     const button = joinForm.querySelector("button");
@@ -127,6 +131,10 @@ joinForm.addEventListener("submit", async function (event) {
             `Successfully joined game ${data.gameCode}! Welcome, ${playerName}.`;
 
         console.log("Joined room:", data);
+        gameCode = data.gameCode;
+        currentPlayerId = data.playerId;
+        loadRoomLobby(gameCode);
+        startLobbyPolling(gameCode);
 
     } catch (error) {
         results.textContent = "Error: " + error.message;
@@ -136,3 +144,70 @@ joinForm.addEventListener("submit", async function (event) {
         button.textContent = "Join Game";
     }
 });
+
+
+async function loadRoomLobby(gameCode) {
+    try {
+        const response = await fetch(`/api/rooms/${gameCode}`);
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error || "Unable to load room.");
+        }
+
+        // Show the lobby
+        document.getElementById("room-lobby")
+            .classList.remove("hidden");
+
+        // Display game code and status
+        document.getElementById("lobby-game-code").textContent =
+            data.gameCode;
+
+        document.getElementById("lobby-status").textContent =
+            `Status: ${data.status}`;
+
+        // Get the player list element
+        const playerList = document.getElementById("player-list");
+
+        // Clear the previous player list
+        playerList.innerHTML = "";
+
+        // Display every player
+        data.players.forEach(function (player) {
+            const listItem = document.createElement("li");
+
+            listItem.textContent = player.name +
+                (player.isHost ? " (Host)" : "");
+
+            playerList.appendChild(listItem);
+        });
+
+        // Show Start Game button only to the host
+        const startButton =
+            document.getElementById("start-game-button");
+
+        if (currentPlayerId === hostId && hostId !== null) {
+            startButton.classList.remove("hidden");
+        } else {
+            startButton.classList.add("hidden");
+        }
+
+    } catch (error) {
+        console.error("Lobby error:", error);
+        alert(error.message);
+    }
+}
+
+let lobbyInterval = null;
+function startLobbyPolling(gameCode) {
+
+    // Stop any previous polling
+    if (lobbyInterval !== null) {
+        clearInterval(lobbyInterval);
+    }
+
+    // Refresh the lobby every 2 seconds
+    lobbyInterval = setInterval(function () {
+        loadRoomLobby(gameCode);
+    }, 2000);
+}

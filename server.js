@@ -381,6 +381,35 @@ app.post("/api/rooms/:gameCode/join", function (request, response) {
     });
 });
 
+
+// Get room information
+app.get("/api/rooms/:gameCode", function (request, response) {
+    const gameCode = request.params.gameCode.toUpperCase();
+
+    // Find the room
+    const room = rooms.get(gameCode);
+
+    // Check whether the room exists
+    if (!room) {
+        return response.status(404).json({
+            error: "Room not found."
+        });
+    }
+
+    // Send room information without revealing the movies
+    response.json({
+        success: true,
+        gameCode: gameCode,
+        status: room.status,
+        players: room.players.map(player => ({
+            id: player.id,
+            name: player.name,
+            isHost: player.isHost
+        }))
+    });
+});
+
+
 app.listen(PORT, function () {
     console.log(`Server running at http://localhost:${PORT}`);
 });
