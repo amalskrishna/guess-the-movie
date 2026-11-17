@@ -30,6 +30,23 @@ socket.on("room-deleted", () => {
     alert("The host has deleted this room.");
     window.location.href = "/";
 });
+socket.on("timestamp-submitted", (data) => {
+    console.log("Timestamp selected:", data.timestamp);
+    const movieFrame = document.getElementById("movie-frame");
+    if(movieFrame){
+        movieFrame.src=data.framePath;
+    }
+    const timestampSection = document.getElementById("timestamp-section");
+    const guessSection = document.getElementById("guess-section");
+
+    if (timestampSection) {
+        timestampSection.classList.add("hidden");
+    }
+
+    if (guessSection) {
+        guessSection.classList.remove("hidden");
+    }
+});
 
 const form = document.getElementById("capture-form");
 
@@ -192,9 +209,20 @@ async function loadGameState() {
         }
 
         currentSelectorId = data.currentSelectorId;
-console.log("Current player ID:", currentPlayerId);
-console.log("Current selector ID:", data.currentSelectorId);
-console.log("Selector name:", data.currentSelectorName);
+        const gamePlayerList = document.getElementById("game-player-list");
+
+        gamePlayerList.innerHTML = "";
+
+        data.players.forEach(player => {
+            const li = document.createElement("li");
+            li.textContent = player.name;
+
+            if (player.id === data.currentSelectorId) {
+                li.textContent += " (Selecting)";
+            }
+
+            gamePlayerList.appendChild(li);
+        });
         document.getElementById("game-round").textContent =
             `Round ${data.currentRound} of ${data.totalRounds}`;
         const selectorElement = document.getElementById("timestamp-section");
@@ -212,12 +240,65 @@ console.log("Selector name:", data.currentSelectorName);
                 `Waiting for ${data.currentSelectorName} to select a timestamp...`;
         }
 
-        console.log("Game state:", data);
+        const timestampSlider = document.getElementById("timestamp-slider");
+        const selectedTimestamp = document.getElementById("selected-timestamp");
 
+        if (timestampSlider && selectedTimestamp) {
+            timestampSlider.addEventListener("input", function () {
+                const totalSeconds = Number(timestampSlider.value);
+
+                const hours = Math.floor(totalSeconds / 3600);
+                const minutes = Math.floor((totalSeconds % 3600) / 60);
+                const seconds = totalSeconds % 60;
+
+                selectedTimestamp.textContent =
+                    `${String(hours).padStart(2, "0")}:` +
+                    `${String(minutes).padStart(2, "0")}:` +
+                    `${String(seconds).padStart(2, "0")}`;
+            });
+        }
     } catch (error) {
         console.error("Game loading error:", error);
         alert(error.message);
     }
+}
+
+const submitTimestampButton = document.getElementById("submit-timestamp-button");
+if (submitTimestampButton) {
+    submitTimestampButton.addEventListener("click", async function () {
+        const timestampSlider = document.getElementById("timestamp-slider");
+        const timestamp = Number(timestampSlider.value);
+
+        console.log("Selected timestamp:", timestamp);
+
+    try {
+        const response = await fetch(
+            `/api/rooms/${gameCode}/submit-timestamp`,
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    playerId: currentPlayerId,
+                    timestamp: timestamp
+                })
+            }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error || "Unable to submit timestamp.");
+        }
+
+        console.log("Timestamp submitted successfully.");
+
+    } catch (error) {
+        console.error("Timestamp submission error:", error);
+        alert(error.message);
+    }
+    });
 }
 
 async function loadRoomLobby(gameCode) {

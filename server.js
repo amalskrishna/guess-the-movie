@@ -6,7 +6,7 @@ const { Server } = require("socket.io");
 require("dotenv").config();
 const { GoogleGenAI } = require("@google/genai");
 const ai = new GoogleGenAI({
-    apiKey: process.env.GEMINI_API_KEY
+    apiKey: process.env.GEMINI_API_KEY_TEST
 });
 
 const app = express();
@@ -559,6 +559,54 @@ app.delete("/api/rooms/:gameCode", (req, res) => {
     res.json({
         success: true,
         message: "Room deleted successfully."
+    });
+});
+
+app.post("/api/rooms/:gameCode/submit-timestamp", async function (request, response) {
+    const gameCode = request.params.gameCode.toUpperCase();
+    const room = rooms.get(gameCode);
+
+    if (!room) {
+        return response.status(404).json({
+            error: "Room not found."
+        });
+    }
+
+    if (room.status !== "playing") {
+        return response.status(400).json({
+            error: "The game is not currently playing."
+        });
+    }
+
+    const { playerId, timestamp } = request.body;
+
+    if (playerId !== room.currentSelectorId) {
+        return response.status(403).json({
+            error: "You are not the current timestamp selector."
+        });
+    }
+
+    if (!Number.isFinite(timestamp) || timestamp < 0) {
+        return response.status(400).json({
+            error: "Invalid timestamp."
+        });
+    }
+    const currentMovie = room.movies[room.currentMovieIndex];
+    console.log("Current movie:", currentMovie.title, currentMovie.year);
+    const framePath = await captureMovieFrame(
+        currentMovie.title,
+        currentMovie.year,
+        timestamp
+    );
+    room.selectedTimestamp = timestamp;
+    io.to(gameCode).emit("timestamp-submitted", {
+        timestamp: timestamp,
+        framePath: framePath
+    });
+
+    response.json({
+        success: true,
+        message: "Timestamp submitted."
     });
 });
 
